@@ -6,8 +6,9 @@
 \usage{
 conformal.fun.split(
   x,
-  t,
+  t_x,
   y,
+  t_y,
   x0,
   train.fun,
   predict.fun,
@@ -15,10 +16,10 @@ conformal.fun.split(
   split = NULL,
   seed = FALSE,
   randomized = FALSE,
-  seed_tau = FALSE,
+  seed.rand = FALSE,
   verbose = FALSE,
-  training_size = 0.5,
-  s_type = "st-dev"
+  rho = 0.5,
+  s.type = "st-dev"
 )
 }
 \arguments{
@@ -26,11 +27,14 @@ conformal.fun.split(
 of p vectors(with variable length, since the evaluation grid may change).
 If x is NULL, the function will sample it from a gaussian.}
 
-\item{t}{The grid points for the evaluation of function y_val. It is a list of vectors.
-If the y_val data type is "fData" or "mfData" is must be NULL.}
+\item{t_x}{The grid points for the evaluation of function x. It is a list of vectors.
+If the x data type is "fData" or "mfData" is must be NULL.}
 
-\item{y}{The response variable. It is either, as with x and t, a list of list of
+\item{y}{The response variable. It is either, as with x, a list of list of
 vectors or an fda object (of type fd, fData, mfData).}
+
+\item{t_y}{The grid points for the evaluation of function y_val. It is a list of vectors.
+If the y_val data type is "fData" or "mfData" is must be NULL.}
 
 \item{x0}{The new points to evaluate, a list of n0 elements. Each element is composed
 by a list of p vectors(with variable length).}
@@ -59,23 +63,25 @@ is ignored.}
 
 \item{randomized}{Should the randomized approach be used? Default is FALSE.}
 
-\item{seed_tau}{The seed for the randomized version.Default is FALSE.}
+\item{seed.rand}{The seed for the randomized version.Default is FALSE.}
 
 \item{verbose}{Should intermediate progress be printed out? Default is FALSE.}
 
-\item{training_size}{Split proportion between training and calibration set.
+\item{rho}{Split proportion between training and calibration set.
 Default is 0.5.}
 
-\item{s_type}{The type of modulation function.
+\item{s.type}{The type of modulation function.
 Currently we have 3 options: "identity","st-dev","alpha-max". Default is "std-dev".}
 }
 \value{
-A list with the following components: t,pred,k_s,s_type,s,alpha,randomized,tau,
- extremes_are_included,average_width,product_integral. t and s are lists of vectors,
+A list with the following components: t,pred,k_s,s.type,s,alpha,randomized,tau,
+ extremes_are_included,average_width,product_integral, res, lo, up.
+  t and s are lists of vectors,
 pred has the same interval structure of y_val, but the outside list is of length n0,
 k_s, average_width and product_integral are all positive floats, alpha and tau are
 positive floats less than 1, randomized and extremes_are_included are logical values,
-while s_type is a string.
+while s.type is a string. Finally lo and up are lists of length n0 of lists of length
+p, each containing a vector of lower and upper bounds respectively.
 }
 \description{
 Compute prediction intervals using split conformal inference.
@@ -83,8 +89,8 @@ Compute prediction intervals using split conformal inference.
 \examples{
 ## fData #############################?
 
-N = 20
-P = 1e2
+N = 1e2
+P = 1e3
 grid = seq( 0, 1, length.out = P )
 C = roahd::exp_cov_function( grid, alpha = 0.3, beta = 0.4 )
 values = roahd::generate_gauss_fdata( N,
@@ -93,11 +99,13 @@ values = roahd::generate_gauss_fdata( N,
 fD = roahd::fData( grid, values )
 x0=list(as.list(grid))
 fun=mean_lists()
-final.fData = conformal.fun.split(NULL,NULL, fD, x0, fun$train.fun, fun$predict.fun,
+final.fData = conformal.fun.split(x=NULL,t_x=NULL, y=fD,
+                                  t_y=NULL, x0=x0, fun$train.fun, fun$predict.fun,
                              alpha=0.1,
-                             split=NULL, seed=FALSE, randomized=FALSE,seed_tau=FALSE,
-                             verbose=TRUE, training_size=0.5,s_type="alpha-max")
+                             split=NULL, seed=FALSE, randomized=FALSE,seed.rand=FALSE,
+                             verbose=TRUE, rho=0.5,s.type="alpha-max")
 plot_fun(final.fData)
+
 
 ###  mfData ###################################
 
@@ -112,16 +120,17 @@ Data_2 = roahd::generate_gauss_fdata( N, centerline = log(1+ 2 * pi * grid ), Co
 mfD=roahd::mfData( grid, list( Data_1, Data_2 ) )
 x0=list(as.list(grid))
 fun=mean_lists()
-final.mfData = conformal.fun.split(NULL,NULL, mfD, x0, fun$train.fun, fun$predict.fun,
+final.mfData = conformal.fun.split(NULL,NULL, mfD,NULL, x0, fun$train.fun, fun$predict.fun,
                              alpha=0.1,
-                             split=NULL, seed=FALSE, randomized=FALSE,seed_tau=FALSE,
-                             verbose=TRUE, training_size=0.5,s_type="alpha-max")
+                             split=NULL, seed=FALSE, randomized=FALSE,seed.rand=FALSE,
+                             verbose=TRUE, rho=0.5,s.type="alpha-max")
 h=plot_fun(final.mfData)
 
 ### fd ###########################################
 
 daybasis <- fda::create.fourier.basis(c(0, 365), nbasis=65)
-tempfd <- fda::smooth.basis(fda::day.5, fda::CanadianWeather$dailyAv[,,"Temperature.C"],daybasis)$fd
+tempfd <- fda::smooth.basis(fda::day.5, fda::CanadianWeather$dailyAv
+                            [,,"Temperature.C"],daybasis)$fd
 Lbasis <- fda::create.constant.basis(c(0, 365))
 Lcoef <- matrix(c(0,(2*pi/365)^2,0),1,3)
 bfdobj <- fda::fd(Lcoef,Lbasis)
@@ -131,10 +140,10 @@ Ltempmat <- fda::eval.fd(fda::day.5, tempfd, harmaccelLfd)
 t=1:365
 x0=list(as.list(grid))
 fun=mean_lists()
-final.fd = conformal.fun.split(NULL,fda::day.5, tempfd, x0, fun$train.fun, fun$predict.fun,
+final.fd = conformal.fun.split(NULL,NULL, tempfd,fda::day.5,  x0, fun$train.fun, fun$predict.fun,
                              alpha=0.1,
-                             split=NULL, seed=FALSE, randomized=FALSE,seed_tau=FALSE,
-                             verbose=TRUE, training_size=0.5,s_type="alpha-max")
+                             split=NULL, seed=FALSE, randomized=FALSE,seed.rand=FALSE,
+                             verbose=TRUE, rho=0.5,s.type="alpha-max")
 plot_fun(final.fd)
 
 }

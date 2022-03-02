@@ -2,7 +2,7 @@ Type: Package
 Package: conformalInference.fd
 Title: Tools for Conformal Inference for Regression in Multivariate
         Functional Setting
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: c(
     person("Jacopo", "Diquigiovanni", role = c("aut", "ths")),
     person("Matteo", "Fontana", , "matteo.fontana@ec.europa.eu", role = c("aut", "ths")),
@@ -26,12 +26,12 @@ URL: https://github.com/ryantibs/conformal ,
 License: GPL-2
 Depends: R (>= 4.1.0)
 Imports: fda (>= 5.5.1), future (>= 1.23.0), future.apply (>= 1.8.1),
-        ggplot2 (>= 3.3.5), gridExtra (>= 2.3), stats, utils,
-Suggests: roahd
+        ggplot2 (>= 3.3.5), gridExtra (>= 2.3), stats, utils, methods
+Suggests: roahd, pbapply
 Encoding: UTF-8
 RoxygenNote: 7.1.2
 NeedsCompilation: no
-Packaged: 2022-01-23 13:06:11 UTC; paolo
+Packaged: 2022-03-02 15:39:34 UTC; paolo
 Author: Jacopo Diquigiovanni [aut, ths],
   Matteo Fontana [aut, ths],
   Aldo Solari [aut, ths],
@@ -40,4 +40,4 @@ Author: Jacopo Diquigiovanni [aut, ths],
   Ryan Tibshirani [ctb]
 Maintainer: Paolo Vergottini <paolo.vergottini@gmail.com>
 Repository: CRAN
-Date/Publication: 2022-01-25 08:42:46 UTC
+Date/Publication: 2022-03-02 16:10:02 UTC

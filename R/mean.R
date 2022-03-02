@@ -8,6 +8,9 @@
 #' \code{\link{conformal.fun.split}}
 #'
 #' @export
+#'
+
+
 
 
 mean_lists = function() {
@@ -46,7 +49,13 @@ mean_lists = function() {
     return(sol)
   }
 
+  special.fun = function(x,t,y,out){
+    return(y)
+  }
 
 
-  return(list(train.fun=train.fun, predict.fun=predict.fun))
+
+
+
+  return(list(train.fun=train.fun, predict.fun=predict.fun, special.fun=special.fun))
 }
