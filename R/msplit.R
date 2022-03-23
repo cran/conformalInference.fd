@@ -67,9 +67,9 @@
 
 conformal.fun.msplit = function(x,t_x, y,t_y, x0, train.fun, predict.fun, alpha=0.1,
                                 split=NULL, seed=FALSE, randomized=FALSE,seed.rand=FALSE,
-                                verbose=FALSE, rho=NULL,s.type="alpha-max",B=100,lambda=0,
-                                tau = 0.05) {
-
+                                verbose=FALSE, rho=NULL,s.type="alpha-max",B=50,lambda=0,
+                                tau = 0.08) {
+#base tau 0.10
 
 
   if(is.null(rho) || length(rho)!=B)
@@ -99,7 +99,7 @@ conformal.fun.msplit = function(x,t_x, y,t_y, x0, train.fun, predict.fun, alpha=
   check.pos.num(lambda)
   check.num.01(tau)
 
-  tr = tau*B + .001
+  tr = 2*tau*B + .001
 
 
   ## Needed to parallelize
@@ -111,12 +111,16 @@ conformal.fun.msplit = function(x,t_x, y,t_y, x0, train.fun, predict.fun, alpha=
   Y_lo_up <- future.apply::future_lapply(1:B, function(bbb) { #future.apply::future_
 
 
+
     out<-conformal.fun.split(x, t_x, y,t_y, x0, train.fun, predict.fun,
                              alpha*(1-tau) + (alpha*lambda)/B,
-                             split, seed+bbb^3, randomized,seed.rand,
+                             split, seed+bbb^2, randomized,seed.rand,
                              verbose, rho[bbb] ,s.type)
 
-    return(rbind(unlist(out$lo),unlist(out$up)))
+
+
+  return(rbind(unlist(out$lo),unlist(out$up)))
+
   })
 
 
@@ -130,32 +134,41 @@ conformal.fun.msplit = function(x,t_x, y,t_y, x0, train.fun, predict.fun, alpha=
     Map(function(u,v) sol2[[i]][k,u:v], (cum[j]+1),
         cum[j+1])[[1]]    )))
 
+  #print(joint)
+
 
   # Compute depth
   joint.dep<-t(sapply(1:n0, function(i) 1/apply(abs(scale(sol2[[i]])),1,max)))
+
+  #return(list(joint=joint,joint.dep=joint.dep))
 
 
 
   #Compute level sets
   join <- lapply(1:n0, function (j) {
     o=order(joint.dep[j,],decreasing = TRUE)
+    o.u=order(joint.dep[j,seq(2,2*B,2)],decreasing = TRUE)[1]
+    #o.l=order(joint.dep[j,seq(1,2*B,2)],decreasing = TRUE)[1]
     a<-floor(tr)
     qt=o[1:a]
     obs<-joint[[j]][qt]
+    #obs<-append(append(obs,joint[[j]][o.u]),joint[[j]][o.l])
     return(obs)
   })
+
+  #return(join)
 
 
 
   lo<-lapply(1:n0, function(i){
     mat<-list2matrix(join[[i]])
-    mat_min<-apply(mat,2,min)
+    mat_min<-apply(mat,2,min,na.rm=T)
     return(lapply(1:p, function(j) mat_min[(cum[j]+1):cum[j+1]]))
   })
 
   up<-lapply(1:n0, function(i){
     mat<-list2matrix(join[[i]])
-    mat_max<-apply(mat,2,max)
+    mat_max<-apply(mat,2,max,na.rm=T)
     return(lapply(1:p, function(j) mat_max[(cum[j]+1):cum[j+1]]))
   })
 

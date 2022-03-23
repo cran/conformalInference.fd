@@ -74,76 +74,35 @@ Default is 0.5.}
 Currently we have 3 options: "identity","st-dev","alpha-max". Default is "std-dev".}
 }
 \value{
-A list with the following components: t,pred,k_s,s.type,s,alpha,randomized,tau,
- extremes_are_included,average_width,product_integral, res, lo, up.
-  t and s are lists of vectors,
+A list with the following components: t,pred,average_width,lo, up.
+t is a list of vectors,
 pred has the same interval structure of y_val, but the outside list is of length n0,
-k_s, average_width and product_integral are all positive floats, alpha and tau are
-positive floats less than 1, randomized and extremes_are_included are logical values,
-while s.type is a string. Finally lo and up are lists of length n0 of lists of length
+lo and up are lists of length n0 of lists of length
 p, each containing a vector of lower and upper bounds respectively.
 }
 \description{
 Compute prediction intervals using split conformal inference.
 }
 \examples{
-## fData #############################?
+###  mfData #
 
-N = 1e2
-P = 1e3
+library(roahd)
+
+N = 10
+P= 5
 grid = seq( 0, 1, length.out = P )
-C = roahd::exp_cov_function( grid, alpha = 0.3, beta = 0.4 )
-values = roahd::generate_gauss_fdata( N,
-                               centerline = sin( 2 * pi * grid ),
-                               Cov = C )
-fD = roahd::fData( grid, values )
-x0=list(as.list(grid))
-fun=mean_lists()
-final.fData = conformal.fun.split(x=NULL,t_x=NULL, y=fD,
-                                  t_y=NULL, x0=x0, fun$train.fun, fun$predict.fun,
-                             alpha=0.1,
-                             split=NULL, seed=FALSE, randomized=FALSE,seed.rand=FALSE,
-                             verbose=TRUE, rho=0.5,s.type="alpha-max")
-plot_fun(final.fData)
-
-
-###  mfData ###################################
-
-N = 1e2
-P = 1e3
-t0 = 0
-t1 = 1
-grid = seq( t0, t1, length.out = P )
-C = roahd::exp_cov_function( grid, alpha = 0.3, beta = 0.4 )
-Data_1 = roahd::generate_gauss_fdata( N, centerline = sin( 2 * pi * grid ), Cov = C )
-Data_2 = roahd::generate_gauss_fdata( N, centerline = log(1+ 2 * pi * grid ), Cov = C )
-mfD=roahd::mfData( grid, list( Data_1, Data_2 ) )
+C = exp_cov_function( grid, alpha = 0.3, beta = 0.4 )
+Data_1 = generate_gauss_fdata( N, centerline = sin( 2 * pi * grid ), Cov = C )
+Data_2 = generate_gauss_fdata( N, centerline = log(1+ 2 * pi * grid ), Cov = C )
+mfD=mfData( grid, list( Data_1, Data_2 ) )
 x0=list(as.list(grid))
 fun=mean_lists()
 final.mfData = conformal.fun.split(NULL,NULL, mfD,NULL, x0, fun$train.fun, fun$predict.fun,
-                             alpha=0.1,
+                             alpha=0.2,
                              split=NULL, seed=FALSE, randomized=FALSE,seed.rand=FALSE,
-                             verbose=TRUE, rho=0.5,s.type="alpha-max")
-h=plot_fun(final.mfData)
+                             verbose=TRUE, rho=0.5,s.type="identity")
 
-### fd ###########################################
 
-daybasis <- fda::create.fourier.basis(c(0, 365), nbasis=65)
-tempfd <- fda::smooth.basis(fda::day.5, fda::CanadianWeather$dailyAv
-                            [,,"Temperature.C"],daybasis)$fd
-Lbasis <- fda::create.constant.basis(c(0, 365))
-Lcoef <- matrix(c(0,(2*pi/365)^2,0),1,3)
-bfdobj <- fda::fd(Lcoef,Lbasis)
-bwtlist <- fda::fd2list(bfdobj)
-harmaccelLfd <- fda::Lfd(3, bwtlist)
-Ltempmat <- fda::eval.fd(fda::day.5, tempfd, harmaccelLfd)
-t=1:365
-x0=list(as.list(grid))
-fun=mean_lists()
-final.fd = conformal.fun.split(NULL,NULL, tempfd,fda::day.5,  x0, fun$train.fun, fun$predict.fun,
-                             alpha=0.1,
-                             split=NULL, seed=FALSE, randomized=FALSE,seed.rand=FALSE,
-                             verbose=TRUE, rho=0.5,s.type="alpha-max")
-plot_fun(final.fd)
+
 
 }

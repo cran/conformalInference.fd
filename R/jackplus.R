@@ -55,7 +55,7 @@ conformal.fun.jackplus = function(x,t_x, y,t_y, x0, train.fun, predict.fun, alph
   p=length(y[[1]])
   grid_size=vapply(y[[1]],function(x) length(x),integer(1))
   acc_grid=c(0,cumsum(grid_size))
-
+  alpha<-alpha/2
 
   # Check input arguments
   check.args(x=x, t_y=t_y,y=y,x0=x0,train.fun=train.fun,
@@ -117,8 +117,9 @@ conformal.fun.jackplus = function(x,t_x, y,t_y, x0, train.fun, predict.fun, alph
   #get level set
 
    join <- future.apply::future_lapply(1:n0, function (j) {
-     o=order(joint.dep[j,])
-     qt=o[floor(alpha*(2*n)):(2*n)]
+     o=order(joint.dep[j,],decreasing = T)
+     a<-ceiling((1-alpha)*2*n)
+     qt=o[1:a]
      obs<-joint[[j]][qt]
      return(obs)
    })
@@ -127,14 +128,16 @@ conformal.fun.jackplus = function(x,t_x, y,t_y, x0, train.fun, predict.fun, alph
    lo<-lapply(1:n0, function(i){
      mat<-list2matrix(join[[i]])
      mat_min<-apply(mat,2,min)
-     low<-future.apply::future_lapply(1:p, function(j) mat_min[(acc_grid[j]+1):acc_grid[j+1]])
+     low<-future.apply::future_lapply(1:p, function(j)
+       mat_min[(acc_grid[j]+1):acc_grid[j+1]])
      return(low)
    })
 
    up<-lapply(1:n0, function(i){
      mat<-list2matrix(join[[i]])
      mat_max<-apply(mat,2,max)
-     upp<-future.apply::future_lapply(1:p, function(j) mat_max[(acc_grid[j]+1):acc_grid[j+1]])
+     upp<-future.apply::future_lapply(1:p, function(j)
+       mat_max[(acc_grid[j]+1):acc_grid[j+1]])
      return(upp)
    })
 

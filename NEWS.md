@@ -1,4 +1,10 @@
-# conformalInference.fd 1.1.0
+# conformalInference.fd 1.1.1
+
+## version 1.1.1
+
+- Included BikeMi data as example
+- Added feature to the plot function
+- Grouped all the plot functions into one
 
 ## version 1.1.0
 

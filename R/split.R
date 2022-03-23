@@ -38,13 +38,10 @@
 #' @param s.type The type of modulation function.
 #'  Currently we have 3 options: "identity","st-dev","alpha-max". Default is "std-dev".
 #'
-#' @return A list with the following components: t,pred,k_s,s.type,s,alpha,randomized,tau,
-#'  extremes_are_included,average_width,product_integral, res, lo, up.
-#'   t and s are lists of vectors,
+#' @return A list with the following components: t,pred,average_width,lo, up.
+#' t is a list of vectors,
 #' pred has the same interval structure of y_val, but the outside list is of length n0,
-#' k_s, average_width and product_integral are all positive floats, alpha and tau are
-#' positive floats less than 1, randomized and extremes_are_included are logical values,
-#' while s.type is a string. Finally lo and up are lists of length n0 of lists of length
+#' lo and up are lists of length n0 of lists of length
 #' p, each containing a vector of lower and upper bounds respectively.
 #'
 #'
@@ -168,9 +165,7 @@ conformal.fun.split = function(x, t_x, y,t_y, x0, train.fun, predict.fun, alpha=
   if ((ceiling(l+tau-(l+1)*alpha))==l) r=0
   else{r=sum(sort(rho,decreasing=FALSE)[(ceiling(l+tau-(l+1)*alpha)+1):length(rho)]==k_s)}
 
-  extremes_are_included= tau > (alpha*(l+1)-floor(alpha*(l+1)-tau)+r)/(r+v+2)
   average_width=mean(2*k_s*vect_s)
-  product_integral=exp(mean(log(2*k_s*vect_s)))
 
 
   ##################### BUILD BOUNDS #######################
@@ -181,11 +176,8 @@ conformal.fun.split = function(x, t_x, y,t_y, x0, train.fun, predict.fun, alpha=
   up<-lapply(1:n0, function(i) lapply(1:p, function(j) pred[[i]][[j]]+k_s* s[[j]]))
 
 
-  return(structure(.Data=list(t_y,pred,k_s,s.type,s,alpha,randomized,tau,
-                              extremes_are_included,average_width,product_integral,lo,up),
-                   names=c("t","pred","k_s","s.type","s","alpha","randomized","tau"
-                           ,"extremes_are_included","average_width","product_integral","lo",
-                           "up")))
+  return(structure(.Data=list(t_y,pred,lo,up),
+                   names=c("t","pred","lo","up")))
 
 }
 
